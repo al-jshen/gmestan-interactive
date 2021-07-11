@@ -1,11 +1,11 @@
 from bokeh.io import curdoc
 from bokeh.layouts import column
-from bokeh.models import ColumnDataSource, Slider, Button, HoverTool
+from bokeh.models import ColumnDataSource, Slider, Button, HoverTool, Range1d
 from bokeh.plotting import figure
 
 import numpy as np
 import statsmodels.api as sm
-from scipy.integrate import cumulative_trapezoid
+from scipy.integrate import cumulative_trapezoid, trapezoid
 from scripts.utils import mass_at_radius, virial_radius
 import pickle
 
@@ -17,11 +17,9 @@ rvir_med = np.median(rvir)
 masses = mass_at_radius(rvir, data["gammas"], data["phi0s"], full=True)
 kde = sm.nonparametric.KDEUnivariate(masses)
 kde.fit()
-x = np.array([0])
-x = np.append(x, np.linspace(masses.min(), masses.max(), 250))
-x = np.append(x, 2)
+x = np.linspace(masses.min(), masses.max(), 500)
 y = kde.evaluate(x)
-q = cumulative_trapezoid(y, x, initial=0)
+q = cumulative_trapezoid(y, x, initial=0) * 100
 source = ColumnDataSource(data=dict(x=x, y=y, q=q))
 
 plot = figure(
@@ -33,12 +31,13 @@ plot = figure(
 )
 
 plot.yaxis.visible = False
+plot.y_range.start = y.min()
 plot.ygrid.visible = False
 plot.xaxis.axis_label = "Mass [x10^12 M_sun]"
 
 hover = HoverTool(
     tooltips=[
-        ("Percentile", "@q{%F}"),
+        ("Percentile", "@q{0.00}%"),
         (r"Mass [x10^12 M_sun]", "@x"),
     ],
     mode="vline",
@@ -66,11 +65,10 @@ def update_data(attrname, old, new):
     masses = mass_at_radius(r, data["gammas"], data["phi0s"], full=True)
     kde = sm.nonparametric.KDEUnivariate(masses)
     kde.fit()
-    x = np.array([0])
-    x = np.append(x, np.linspace(masses.min(), masses.max(), 250))
-    x = np.append(x, 2)
+    x = np.linspace(masses.min(), masses.max(), 500)
     y = kde.evaluate(x)
-    q = cumulative_trapezoid(y, x, initial=0)
+    q = cumulative_trapezoid(y, x, initial=0) * 100
+    plot.y_range.start = y.min()
     source.data = dict(x=x, y=y, q=q)
 
 
