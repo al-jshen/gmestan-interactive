@@ -28,7 +28,7 @@ plot = figure(
     # height=800,
     # width=800,
     title=f"Mass distribution at r = {rvir_med:.1f} kpc",
-    tools="pan,reset,save,wheel_zoom",
+    tools="save",
     x_range=[0.0, 2],
 )
 
