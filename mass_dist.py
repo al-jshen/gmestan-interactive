@@ -1,5 +1,5 @@
 from bokeh.io import curdoc
-from bokeh.layouts import column, row
+from bokeh.layouts import column
 from bokeh.models import ColumnDataSource, Slider, Button, HoverTool
 from bokeh.plotting import figure
 
@@ -34,6 +34,7 @@ plot = figure(
 
 plot.yaxis.visible = False
 plot.ygrid.visible = False
+plot.xaxis.axis_label = "Mass [x10^12 M_sun]"
 
 hover = HoverTool(
     tooltips=[
@@ -85,5 +86,5 @@ radius_slider.on_change("value", update_data)
 # Set up layouts and add to document
 inputs = column(radius_slider, virial_button)
 
-curdoc().add_root(row(inputs, plot, width=800))
+curdoc().add_root(column(plot, inputs, width=800))
 curdoc().title = "Mass distribution"
