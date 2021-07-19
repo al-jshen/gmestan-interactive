@@ -140,13 +140,19 @@ percentile_value = Div(
 fixed_percentiles = Div(
     text=f"""
     <h2>
-    16th percentile mass: {np.percentile(masses, 16):.3f}
+    16th percentile: {np.percentile(masses, 16):.3f}
     </h2>
     <h2>
-    50th percentile mass: {np.percentile(masses, 50):.3f}
+    50th percentile: {np.percentile(masses, 50):.3f}
     </h2>
     <h2>
-    84th percentile mass: {np.percentile(masses, 84):.3f}
+    84th percentile: {np.percentile(masses, 84):.3f}
+    </h2>
+    <h2>
+    Mean: {np.mean(masses):.3f}
+    </h2>
+    <h2>
+    Standard error: {np.std(masses):.3f}
     </h2>
     """
 )
@@ -164,13 +170,19 @@ def update_percentile():
     percentile_value.text = f"<h2>Mass: {np.percentile(masses, percentile_input.value):.3f} x10^12 M_sun<h2>"
     fixed_percentiles.text = f"""
     <h2>
-    16th percentile mass: {np.percentile(masses, 16):.3f}
+    16th percentile: {np.percentile(masses, 16):.3f}
     </h2>
     <h2>
-    50th percentile mass: {np.percentile(masses, 50):.3f}
+    50th percentile: {np.percentile(masses, 50):.3f}
     </h2>
     <h2>
-    84th percentile mass: {np.percentile(masses, 84):.3f}
+    84th percentile: {np.percentile(masses, 84):.3f}
+    </h2>
+    <h2>
+    Mean: {np.mean(masses):.3f}
+    </h2>
+    <h2>
+    Standard error: {np.std(masses):.3f}
     </h2>
     """
 
