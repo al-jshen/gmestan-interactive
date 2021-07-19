@@ -8,6 +8,8 @@ from bokeh.models import (
     Range1d,
     Patch,
     Span,
+    NumericInput,
+    Div,
 )
 from bokeh.plotting import figure
 
@@ -36,7 +38,6 @@ slice = figure(
     x_range=[0.0, 2],
 )
 
-
 slice.yaxis.visible = False
 slice.y_range.start = y.min()
 slice.ygrid.visible = False
@@ -56,12 +57,21 @@ slice.add_tools(hover)
 
 slice.line("x", "y", source=source, line_width=3, line_alpha=0.6)
 
+slice_vline = Span(
+    location=x[np.argmin(np.abs(q - 50))],
+    dimension="height",
+    line_color="#81A1C1",
+    line_width=2,
+)
+
+
+slice.renderers.extend([slice_vline])
+
 # cumulative mass profile
 
 dist = figure(
     title="Cumulative mass profile", tools="save", x_range=[0.0, 350], y_range=[0.0, 2]
 )
-
 
 dist.xaxis.axis_label = "Radius [kpc]"
 dist.xaxis.axis_label_text_font_size = "16pt"
@@ -106,14 +116,55 @@ radius_slider = Slider(
 )
 virial_button = Button(label="Virial radius")
 
+percentile_input = NumericInput(
+    title="Percentile", mode="float", value=50, low=0, high=100
+)
+
+percentile_value = Div(
+    text=f"<h2>50th percentile mass: {np.percentile(masses, 50):.3f} x10^12 M_sun<h2>"
+)
+
+fixed_percentiles = Div(
+    text=f"""
+    <h2>
+    16th percentile mass: {np.percentile(masses, 16):.3f}
+    </h2>
+    <h2>
+    50th percentile mass: {np.percentile(masses, 50):.3f}
+    </h2>
+    <h2>
+    84th percentile mass: {np.percentile(masses, 84):.3f}
+    </h2>
+    """
+)
+
 
 def update_virial_radius():
     radius_slider.value = rvir_med
 
 
+def update_percentile():
+    slice_vline.location = source.data["x"][
+        np.argmin(np.abs(percentile_input.value - source.data["q"]))
+    ]
+    percentile_value.text = f"<h2>{percentile_input.value}th percentile mass: {np.percentile(masses, percentile_input.value):.3f} x10^12 M_sun<h2>"
+    fixed_percentiles.text = f"""
+    <h2>
+    16th percentile mass: {np.percentile(masses, 16):.3f}
+    </h2>
+    <h2>
+    50th percentile mass: {np.percentile(masses, 50):.3f}
+    </h2>
+    <h2>
+    84th percentile mass: {np.percentile(masses, 84):.3f}
+    </h2>
+    """
+
+
 def update_data(attrname, old, new):
 
     # Get the current slider values
+    global masses
     r = radius_slider.value
     masses = mass_at_radius(r, data["gammas"], data["phi0s"], full=True)
     kde = sm.nonparametric.KDEUnivariate(masses)
@@ -124,18 +175,33 @@ def update_data(attrname, old, new):
     slice.y_range.start = y.min()
     source.data = dict(x=x, y=y, q=q)
     vline.location = r
+    update_percentile()
 
 
 def update_title(attrname, old, new):
     slice.title.text = f"Mass distribution at r = {radius_slider.value:.1f} kpc"
 
 
+def update_percentile_wrapper(attrname, old, new):
+    update_percentile()
+
+
 virial_button.on_click(update_virial_radius)
 radius_slider.on_change("value", update_title)
 radius_slider.on_change("value", update_data)
+percentile_input.on_change("value", update_percentile_wrapper)
 
-
-grid = column(row(dist, slice), radius_slider, virial_button)
+grid = row(
+    dist,
+    slice,
+    column(
+        virial_button,
+        radius_slider,
+        percentile_input,
+        percentile_value,
+        fixed_percentiles,
+    ),
+)
 
 curdoc().add_root(grid)
 curdoc().title = "Mass distribution"
