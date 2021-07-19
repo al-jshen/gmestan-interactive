@@ -117,7 +117,11 @@ radius_slider = Slider(
 virial_button = Button(label="Virial radius")
 
 percentile_input = NumericInput(
-    title="Percentile", mode="float", value=50, low=0, high=100
+    title="Percentile (press enter after changing)",
+    mode="float",
+    value=50,
+    low=0,
+    high=100,
 )
 
 percentile_value = Div(
