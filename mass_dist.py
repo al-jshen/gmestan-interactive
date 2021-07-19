@@ -55,12 +55,12 @@ hover = HoverTool(
 
 slice.add_tools(hover)
 
-slice.line("x", "y", source=source, line_width=3, line_alpha=0.6)
+slice.line("x", "y", source=source, line_width=3, color="#8FBCBB", line_alpha=1)
 
 slice_vline = Span(
     location=x[np.argmin(np.abs(q - 50))],
     dimension="height",
-    line_color="#81A1C1",
+    line_color="#D08770",
     line_width=2,
 )
 
@@ -106,15 +106,24 @@ dist.add_glyph(cis, glyph997)
 
 dist.line(x1, massprof[3], line_width=2)
 
-vline = Span(location=rvir_med, dimension="height", line_color="#81A1C1", line_width=2)
+vline = Span(location=rvir_med, dimension="height", line_color="#8FBCBB", line_width=2)
 
 dist.renderers.extend([vline])
 
 # Set up widgets
 radius_slider = Slider(
-    title="radius [kpc]", value=rvir_med, start=1.0, end=350.0, step=0.5
+    title="Radius [kpc]", value=rvir_med, start=1.0, end=350.0, step=0.5
 )
+radius_input = NumericInput(
+    mode="float",
+    value=np.around(radius_slider.value, 3),
+    low=0,
+    high=350,
+)
+
 virial_button = Button(label="Virial radius")
+
+percentile_slider = Slider(title="Percentile", value=50, start=0, end=100, step=0.05)
 
 percentile_input = NumericInput(
     title="Percentile (press enter after changing)",
@@ -145,13 +154,14 @@ fixed_percentiles = Div(
 
 def update_virial_radius():
     radius_slider.value = rvir_med
+    radius_input.value = np.around(radius_slider.value, 3)
 
 
 def update_percentile():
     slice_vline.location = source.data["x"][
         np.argmin(np.abs(percentile_input.value - source.data["q"]))
     ]
-    percentile_value.text = f"<h2>{percentile_input.value}th percentile mass: {np.percentile(masses, percentile_input.value):.3f} x10^12 M_sun<h2>"
+    percentile_value.text = f"<h2>Mass: {np.percentile(masses, percentile_input.value):.3f} x10^12 M_sun<h2>"
     fixed_percentiles.text = f"""
     <h2>
     16th percentile mass: {np.percentile(masses, 16):.3f}
@@ -169,7 +179,11 @@ def update_data(attrname, old, new):
 
     # Get the current slider values
     global masses
-    r = radius_slider.value
+    r = new
+    if radius_slider.value == new:
+        radius_input.value = np.around(r, 3)
+    elif radius_input.value == new:
+        radius_slider.value = r
     masses = mass_at_radius(r, data["gammas"], data["phi0s"], full=True)
     kde = sm.nonparametric.KDEUnivariate(masses)
     kde.fit()
@@ -187,22 +201,29 @@ def update_title(attrname, old, new):
 
 
 def update_percentile_wrapper(attrname, old, new):
+    if percentile_slider.value == new:
+        percentile_input.value = np.around(new, 3)
+    elif percentile_input.value == new:
+        percentile_slider.value = np.around(new, 3)
     update_percentile()
 
 
 virial_button.on_click(update_virial_radius)
-radius_slider.on_change("value", update_title)
-radius_slider.on_change("value", update_data)
+radius_slider.on_change("value_throttled", update_title)
+radius_slider.on_change("value_throttled", update_data)
+radius_input.on_change("value", update_data)
+percentile_slider.on_change("value_throttled", update_percentile_wrapper)
 percentile_input.on_change("value", update_percentile_wrapper)
 
-grid = row(
-    dist,
-    slice,
-    column(
-        virial_button,
-        radius_slider,
-        percentile_input,
-        percentile_value,
+grid = column(
+    row(dist, slice),
+    row(
+        column(
+            radius_slider,
+            row(radius_input, virial_button),
+            percentile_slider,
+            row(percentile_input, percentile_value),
+        ),
         fixed_percentiles,
     ),
 )
