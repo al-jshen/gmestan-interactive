@@ -205,10 +205,11 @@ def update_data(attrname, old, new):
     slice.y_range.start = y.min()
     source.data = dict(x=x, y=y, q=q)
     vline.location = r
+    update_title()
     update_percentile()
 
 
-def update_title(attrname, old, new):
+def update_title():
     slice.title.text = f"Mass distribution at r = {radius_slider.value:.1f} kpc"
 
 
@@ -221,7 +222,6 @@ def update_percentile_wrapper(attrname, old, new):
 
 
 virial_button.on_click(update_virial_radius)
-radius_slider.on_change("value_throttled", update_title)
 radius_slider.on_change("value_throttled", update_data)
 radius_input.on_change("value", update_data)
 percentile_slider.on_change("value_throttled", update_percentile_wrapper)
