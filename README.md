@@ -11,4 +11,4 @@ pip3 install -r requirements.txt
 bokeh serve mass_dist.py
 ```
 
-Alternatively, go to the hosted version here: https://massdist.herokuapp.com/
+Alternatively, go to the hosted version here: https://massdist.herokuapp.com
